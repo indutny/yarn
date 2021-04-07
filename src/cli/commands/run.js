@@ -91,6 +91,15 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
       scripts.set(name, pkgScripts[name] || '');
       pkgCommands.add(name);
     }
+
+    // Support electron-builder's app-builder `yarn run install` and rebuild
+    // native packages.
+    if (!scripts.has('install')) {
+      const files = await fs.readdir(config.cwd);
+      if (files.indexOf('binding.gyp') >= 0) {
+        scripts.set('install', 'node-gyp rebuild');
+      }
+    }
   }
 
   function runCommand([action, ...args]): Promise<void> {
